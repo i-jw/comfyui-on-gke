@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comfyui-deploy
+  labels:
+    app: comfyui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comfyui
+  template:
+    metadata:
+      labels:
+        app: comfyui
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+        cloud.google.com/gke-spot: "true"
+      containers:
+        - name: comfyui
+          image: waangjie/stable-diffusion-webui:comfyui
+          resources:
+            requests:
+              cpu: 10
+              memory: 20Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: 11
+              memory: 22Gi
+              nvidia.com/gpu: 1
+          ports:
+            - containerPort: 8848
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comfyui-svc
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8848
+  selector:
+    app: comfyui
+  type: LoadBalancer
